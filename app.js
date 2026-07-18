@@ -410,9 +410,15 @@ function demoMarkers(range) {
 }
 
 function setupMarkersForLoad(isSample) {
-  const hadStore = loadMarkersStore();
-  // Real uploads always start with NO phases. Demo (#demo) seeds examples in-memory only.
-  if (!hadStore) state.markers = isSample ? demoMarkers(state.aligned.range) : [];
+  // Sample data always shows the fixed demo markers, regardless of anything saved
+  // in localStorage from a prior session. Real uploads keep remembering your markers.
+  if (isSample) {
+    state.markers = demoMarkers(state.aligned.range);
+    state.tintPhases = true;
+  } else {
+    const hadStore = loadMarkersStore();
+    if (!hadStore) state.markers = [];
+  }
   Markers.configure({
     card: els.panels.closest('.chart-card'),
     band: els.phaseBand,
