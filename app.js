@@ -401,12 +401,11 @@ function loadMarkersStore() {
   return false;
 }
 function demoMarkers(range) {
-  const [lo, hi] = range, span = hi - lo;
-  const at = (f) => dayFloor(lo + Math.round(span * f));
+  const day = (y, m, d) => Math.floor(Date.UTC(y, m - 1, d) / 1000 / 86400) * 86400;
   return [
-    { id: uid(), t: at(0.16), label: 'Cut started', color: 'auto' },
-    { id: uid(), t: at(0.45), label: 'Maintenance', color: 'auto' },
-    { id: uid(), t: at(0.70), label: 'Lean bulk', color: 'auto' },
+    { id: uid(), t: day(2022, 12, 15), label: 'Diet', color: 'oklch(0.72 0.12 80)' },
+    { id: uid(), t: day(2025, 1, 1), label: 'Recomp', color: 'oklch(0.58 0.13 300)' },
+    { id: uid(), t: day(2026, 2, 1), label: 'Cut', color: 'oklch(0.64 0.11 195)' },
   ];
 }
 
