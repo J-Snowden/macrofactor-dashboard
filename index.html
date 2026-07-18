@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Macroscope · Trends Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/uplot@1.6.31/dist/uPlot.min.css" />
+<link rel="stylesheet" href="dashboard.css" />
+<script src="theme.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="glyph" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M2 12.5 L6 7 L9.5 9.5 L15 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="7" r="1.6" fill="white"/><circle cx="9.5" cy="9.5" r="1.6" fill="white"/></svg>
+      </span>
+      <span>Macroscope <span class="sub">/ trends viewer</span></span>
+    </div>
+    <div class="spacer"></div>
+    <div class="file-pill" id="filePill" title="Loaded file" hidden>
+      <span class="dot"></span>
+      <span class="name" id="fileName">sample data</span>
+    </div>
+    <button class="btn" id="uploadBtn">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V2.5M7.5 2.5 4.5 5.5M7.5 2.5 10.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 9.5v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Upload .xlsx
+    </button>
+    <button class="btn icon" id="helpBtn" type="button" title="How to use this dashboard" aria-label="Help">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.4"/><path d="M6.3 6.1a1.7 1.7 0 0 1 3.3.5c0 1.15-1.6 1.35-1.6 2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.3" r=".75" fill="currentColor"/></svg>
+    </button>
+    <button class="btn icon" id="themeToggle" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+    <input type="file" id="fileInput" accept=".xlsx" style="display:none" />
+  </header>
+
+  <div class="landing" id="landing">
+    <div class="landing-inner">
+      <div class="lead">
+        <div class="lead-glyph" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 17 17" fill="none"><path d="M2 12.5 L6 7 L9.5 9.5 L15 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="7" r="1.6" fill="white"/><circle cx="9.5" cy="9.5" r="1.6" fill="white"/></svg>
+        </div>
+        <h1>See the trends in your MacroFactor data</h1>
+        <p class="sub">Drop your granular export and explore weight, energy, and macros over time. Interactive, private, and entirely in your browser.</p>
+      </div>
+
+      <div class="landing-cards">
+        <div class="card lcard">
+          <h3>Get your data</h3>
+          <ol class="steps">
+            <li><span class="n">1</span><div>Open <b>MacroFactor</b> and tap <b>More</b></div></li>
+            <li><span class="n">2</span><div>Go to <b>Data Export</b></div></li>
+            <li><span class="n">3</span><div>Choose <b>Granular Export</b></div></li>
+            <li><span class="n">4</span><div>Select the metrics you want (listed here), then export the <b>.xlsx</b></div></li>
+            <li><span class="n">5</span><div>Drop the file below to visualize it</div></li>
+          </ol>
+        </div>
+        <div class="card lcard">
+          <h3>Supported metrics</h3>
+          <div class="supported" id="supportedList"></div>
+          <div class="note">Energy balance is calculated automatically from intake and expenditure, so there's no need to export it.</div>
+        </div>
+      </div>
+
+      <button class="dropzone" id="landingDrop" type="button">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div class="dz-big">Drop your .xlsx export here</div>
+        <div class="dz-small">or click to browse</div>
+      </button>
+
+      <div class="demo-cta">
+        <span>No export handy?</span>
+        <button id="demoLink" type="button">Explore with sample data</button>
+      </div>
+
+      <div class="landing-foot">
+        <span>All data stays in your browser. Nothing is uploaded to a server.</span>
+        <span class="disclaimer">An independent project. Not affiliated with, endorsed by, or connected to MacroFactor.</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard" hidden>
+  <div class="stats" id="stats"></div>
+
+  <div class="grid">
+    <aside class="side">
+      <div class="card panel">
+        <h3>Metrics</h3>
+        <div id="metricList"></div>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div class="card chart-card">
+        <div class="chart-top">
+          <div>
+            <div class="title">Trends</div>
+            <div class="hint" id="rangeTitle" style="margin-top:2px;"></div>
+          </div>
+          <div class="spacer"></div>
+          <div class="presets" id="presets"></div>
+          <button class="icon-btn labeled" id="markBtn" type="button" aria-label="Phase markers" aria-expanded="false" title="Add phase markers">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 2.8h7.2l-1.5 2.4 1.5 2.4H4" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <span class="ib-lbl">Markers</span>
+          </button>
+          <button class="icon-btn labeled" id="dispBtn" type="button" aria-label="Display settings" aria-expanded="false" title="Display settings">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5h5.5M11 4.5h2.5M2.5 11.5h2.5M8 11.5h5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="9.5" cy="4.5" r="1.7" stroke="currentColor" stroke-width="1.4"/><circle cx="6.5" cy="11.5" r="1.7" stroke="currentColor" stroke-width="1.4"/></svg>
+            <span class="ib-lbl">Display</span>
+          </button>
+        </div>
+
+        <div class="popover" id="dispPop" hidden>
+          <div class="pop-sec">
+            <div class="pop-lbl">Chart layout</div>
+            <div class="seg" id="modeSeg" role="tablist" style="width:100%;">
+              <button data-mode="stacked" style="flex:1;justify-content:center;">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="3.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="11" height="3.5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+                Stacked
+              </button>
+              <button data-mode="overlaid" class="on" style="flex:1;justify-content:center;">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 9.5 5 5l3 2.5 4.5-5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 12 5 9l3 1.5 4.5-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></svg>
+                Overlaid
+              </button>
+            </div>
+          </div>
+
+          <div class="pop-div"></div>
+
+          <div class="pop-sec">
+            <div class="switchline" id="smoothCtrl" style="margin-top:0;">
+              <button class="switch on" id="smoothSwitch" aria-label="Toggle intake smoothing"></button>
+              <span>Smooth intake</span>
+              <div style="flex:1"></div>
+              <div class="seg sm" id="smoothWin">
+                <button data-w="7">7d</button><button data-w="14">14d</button><button data-w="30" class="on">30d</button>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:9px;line-height:1.5;">
+              Rolling average for calories &amp; macros. Raw scale dots stay untouched.
+            </div>
+          </div>
+
+          <div class="pop-div"></div>
+          <div class="hint" style="line-height:1.5;">
+            Drag to pan · scroll to zoom · double-click to reset
+          </div>
+        </div>
+
+        <div class="popover mark-pop" id="markPop" hidden>
+          <div class="pop-sec">
+            <div class="pop-lbl">Phase markers</div>
+            <div class="switchline" style="margin-top:2px;">
+              <button class="switch on" id="tintSwitch" aria-label="Toggle phase tint"></button>
+              <span>Tint phases</span>
+            </div>
+            <div class="hint" style="margin-top:2px;line-height:1.5;">Each marker starts a phase that runs until the next one.</div>
+          </div>
+
+          <div class="pop-div"></div>
+
+          <div class="pop-sec">
+            <div class="pop-lbl">Add a marker</div>
+            <input type="date" id="mkDate" class="mk-date" />
+            <input type="text" id="mkLabel" class="mk-label" placeholder="e.g. Cut started" maxlength="28" />
+            <div class="mk-color-row">
+              <span class="mk-color-lbl">Color</span>
+              <div class="mk-swatches" id="mkSwatches"></div>
+            </div>
+            <button class="btn primary mk-add" id="mkAdd" type="button">Add marker</button>
+          </div>
+
+          <div class="pop-div" id="mkListDiv"></div>
+          <div class="marker-list" id="markerList"></div>
+        </div>
+
+        <div class="phase-band" id="phaseBand" hidden></div>
+
+        <div class="panels" id="panels"></div>
+        <div id="overview"></div>
+        <div class="tooltip" id="tooltip"></div>
+        <div class="phase-tip" id="phaseTip"></div>
+      </div>
+      <div class="foot">All data stays in your browser · nothing is uploaded to a server.</div>
+    </section>
+  </div>
+  </div>
+</div>
+
+<div class="drop-overlay" id="dropOverlay">
+  <div class="drop-card">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="color:var(--brand)"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <div class="big">Drop your MacroFactor export</div>
+    <div class="small">.xlsx with Date, Weight, Calories, Expenditure…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-card">
+    <button class="help-close" id="helpClose" type="button" aria-label="Close">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 3l7 7M10 3l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <div class="help-head">
+      <div class="help-glyph">?</div>
+      <div>
+        <h2>How to explore</h2>
+        <p>Your data stays in your browser. Here's how to get around.</p>
+      </div>
+    </div>
+    <div class="help-cols">
+      <div class="help-col">
+        <h3>Reading the chart</h3>
+        <ul>
+          <li><span class="kbd">Drag</span><span>Pan across time</span></li>
+          <li><span class="kbd">Scroll</span><span>Zoom in and out</span></li>
+          <li><span class="kbd">Double-click</span><span>Reset to the full range</span></li>
+          <li><span class="kbd">1M–All</span><span>Jump to a quick range</span></li>
+          <li><span class="kbd">Click</span><span>A metric on the left to show or hide it</span></li>
+          <li><span class="kbd">Bottom bar</span><span>Drag or resize to scrub through time</span></li>
+        </ul>
+      </div>
+      <div class="help-col">
+        <h3>Marking phases</h3>
+        <ul>
+          <li><span class="dot"></span><span>The <b>Markers</b> button adds one — pick a date &amp; label</span></li>
+          <li><span class="dot"></span><span>Each marker <b>starts a phase</b> that runs to the next</span></li>
+          <li><span class="dot"></span><span><b>Tint</b> shades each phase in its colour (toggle per phase)</span></li>
+          <li><span class="dot"></span><span><b>Click a phase</b> to zoom in · click again to zoom out</span></li>
+          <li><span class="dot"></span><span><b>Hover a phase</b> for its weight change, rate &amp; intake</span></li>
+          <li><span class="dot"></span><span>Edit a phase's <b>colour or date</b> anytime in the list</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/uplot@1.6.31/dist/uPlot.iife.min.js"></script>
+<script src="config.js"></script>
+<script src="charts.js"></script>
+<script src="markers.js"></script>
+<script src="brush.js"></script>
+<script src="sample-data.js"></script>
+<script src="xlsx-parse.js"></script>
+<script src="app.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks.jsx"></script>
+</body>
+</html>
